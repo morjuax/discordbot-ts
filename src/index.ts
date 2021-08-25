@@ -1,38 +1,44 @@
-import { config as configEnv } from 'dotenv';
+import {config as configEnv} from 'dotenv';
+import {Client, Message} from 'discord.js';
+import {CoreMessage} from "./CoreMessage";
+import {Commands} from "./enums/commands.enum";
+
 configEnv();
 
-import {Client, Message} from 'discord.js';
-import { config } from './config';
 const client: Client = new Client();
+
+
 
 client.on('ready', () => {
     console.log('Bot is ready!');
 });
 
-const isChannelValid = ({id} : {id: string}) => {
+const isChannelValid = ({id}: { id: string }) => {
     return id === process.env.CHANNEL_ID_VALID;
 }
 
 client.on('message', async (message: Message) => {
-    if (message.content.startsWith(`${config.prefix}ping`)) {
-        if (isChannelValid(message.channel)) {
-            // await message.channel.send('🚀 pong'); // general message
-            await message.reply(' pong!'); // specific message - example
-        }
+    const { channel } = message;
+    if (!CoreMessage.isChannelValid(channel.id)) {
+        return;
+    }
+    if (CoreMessage.startsWith(message, Commands.ping)) {
+        // await CoreMessage.sendMessageReply(message, '🚀 pong!');
+        await CoreMessage.sendMessageReply(message, ' pong!');
     }
 
-    if (message.content.startsWith(`${config.prefix}kick`)) { // kick user
-        if (message.member.hasPermission(['KICK_MEMBERS'])) {
+    if (CoreMessage.startsWith(message, Commands.kick)) { // kick user
+        if (CoreMessage.hasPermission(message, ['KICK_MEMBERS'])) {
             const member = message.mentions.members.first();
             if (member) {
                 const kickedMember = await member.kick();
-                return await message.channel.send(`${kickedMember.user.username} has been kicked`);
+                return await CoreMessage.sendMessageChannel(message, `${kickedMember.user.username} has been kicked`);
             }
         }
         return message.reply('You need permissions to do this');
     }
 
-    if (message.content.startsWith(`${config.prefix}deleteMessages`)) { // delete last messages
+    if (CoreMessage.startsWith(message, Commands.deleteMessages)) { // delete last messages
         const messages = await message.channel.fetchMessages();
         await message.channel.bulkDelete(messages);
     }
