@@ -7,15 +7,9 @@ configEnv();
 
 const client: Client = new Client();
 
-
-
 client.on('ready', () => {
     console.log('Bot is ready!');
 });
-
-const isChannelValid = ({id}: { id: string }) => {
-    return id === process.env.CHANNEL_ID_VALID;
-}
 
 client.on('message', async (message: Message) => {
     const { channel } = message;
